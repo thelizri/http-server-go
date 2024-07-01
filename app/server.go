@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 )
 
 func main() {
@@ -38,43 +37,33 @@ func main() {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	buffer := make([]byte, 1024)
+	data := getData(conn)
+	request, _, _ := extractParts(data)
+	url := extractURL(request)
 
-	for {
-		//Set timeout
-		conn.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
-		n, err := conn.Read(buffer)
+	paths := strings.Split(url, "/")
 
-		//Handle time out
-		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-			fmt.Println("read timeout:", err)
-			break
-		}
-
-		//Handle error
-		if err != nil {
-			fmt.Errorf("Cannot read data into buffer, %v", err)
-		}
-
-		request, headers, body := extractParts(string(buffer[:n]))
-		fmt.Printf("Request is here: %s\n\n", request)
-		fmt.Printf("Headers is here: %s\n\n", headers)
-		fmt.Printf("Body is here: %s\n\n", body)
-		url := extractURL(request)
-		fmt.Printf("URL is here: %s\n\n", url)
+	var response string
+	switch paths[1] {
+	case "":
+		response = RESPONSE_OK + CRLF
+	case "echo":
+		response = echoEndpoint(paths[2])
+	default:
+		response = RESPONSE_NOT_FOUND + CRLF
 	}
-
 	// Send data to the client
-	data := []byte(RESPONSE_OK)
-	_, err := conn.Write(data)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	sendData(response, conn)
 }
 
-func extractParts(value string) (request, headers, body string) {
-	fmt.Println()
+func echoEndpoint(echo string) string {
+	status := RESPONSE_OK
+	header := fmt.Sprintf("Content-Type: text/plain\r\nContent-Length: %d\r\n\r\n", len(echo))
+	body := echo
+	return status + header + body
+}
+
+func extractParts(value string) (status, headers, body string) {
 	// Split the input value into headers and body
 	parts := strings.Split(value, "\r\n\r\n")
 	headersPart := parts[0]
@@ -84,10 +73,14 @@ func extractParts(value string) (request, headers, body string) {
 
 	// Split headers part into request line and header lines
 	lines := strings.Split(headersPart, "\r\n")
-	request = lines[0]
+	status = lines[0]
 	headers = strings.Join(lines[1:], "\r\n")
 
-	return request, headers, body
+	return status, headers, body
+}
+
+func extractURL(request string) string {
+	return strings.Split(request, " ")[1]
 }
 
 func extractURL(request string) string {
