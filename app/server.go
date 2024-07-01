@@ -82,7 +82,3 @@ func extractParts(value string) (status, headers, body string) {
 func extractURL(request string) string {
 	return strings.Split(request, " ")[1]
 }
-
-func extractURL(request string) string {
-	return strings.Split(request, " ")[1]
-}
