@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -36,6 +38,31 @@ func main() {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
+	buffer := make([]byte, 1024)
+
+	for {
+		conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+		n, err := conn.Read(buffer)
+
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			fmt.Println("read timeout:", err)
+			break
+		}
+
+		if err != nil {
+			panic("Cannot read data into buffer")
+		}
+
+		if n == 0 {
+			break
+		}
+
+		request, headers, body := extractParts(string(buffer))
+		fmt.Printf("Request is here: %s\n\n", request)
+		fmt.Printf("Headers is here: %s\n\n", headers)
+		fmt.Printf("Body is here: %s\n\n", body)
+	}
+
 	// Send data to the client
 	data := []byte(RESPONSE_200)
 	_, err := conn.Write(data)
@@ -43,4 +70,22 @@ func handleConnection(conn net.Conn) {
 		fmt.Println("Error:", err)
 		return
 	}
+}
+
+func extractParts(value string) (string, string, string) {
+	fmt.Println()
+	// Split the input value into headers and body
+	parts := strings.Split(value, "\r\n\r\n")
+	headersPart := parts[0]
+	body := ""
+	if len(parts) > 1 {
+		body = parts[1]
+	}
+
+	// Split headers part into request line and header lines
+	lines := strings.Split(headersPart, "\r\n")
+	request := strings.Split(lines[0], " ")[1]
+	headers := strings.Join(lines[1:], "\r\n")
+
+	return request, headers, body
 }
