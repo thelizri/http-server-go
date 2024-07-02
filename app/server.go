@@ -7,7 +7,25 @@ import (
 	"strings"
 )
 
+// Enums for methods
+const (
+	GET    = "GET"
+	PUT    = "PUT"
+	POST   = "POST"
+	DELETE = "DELETE"
+)
+
+type handlerFunction func(conn net.Conn, http HttpRequest)
+
+var (
+	getHandlers    = make(map[string]handlerFunction)
+	postHandlers   = make(map[string]handlerFunction)
+	putHandlers    = make(map[string]handlerFunction)
+	deleteHandlers = make(map[string]handlerFunction)
+)
+
 func main() {
+	registerEndpoint(GET, "/hello", helloWorldEndpoint)
 	fmt.Println("Logs from program will appear below")
 	listener, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -34,51 +52,81 @@ func main() {
 
 }
 
+func routeConnection(conn net.Conn, http HttpRequest) {
+	var f handlerFunction
+	switch http.Method {
+	case "GET":
+		f = getHandlers[http.Path]
+	case "POST":
+		f = postHandlers[http.Path]
+	case "PUT":
+		f = putHandlers[http.Path]
+	case "DELETE":
+		f = deleteHandlers[http.Path]
+	default:
+		fmt.Println("Unsupported method:", http.Method)
+	}
+
+	f(conn, http)
+}
+
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	data := getData(conn)
-	request, _, _ := extractParts(data)
-	url := extractURL(request)
+	http_request := extractParts(data)
+	routeConnection(conn, http_request)
+}
 
-	paths := strings.Split(url, "/")
-
-	var response string
-	switch paths[1] {
-	case "":
-		response = RESPONSE_OK + CRLF
-	case "echo":
-		response = echoEndpoint(paths[2])
+func registerEndpoint(method string, endpoint string, handler handlerFunction) {
+	switch method {
+	case "GET":
+		getHandlers[endpoint] = handler
+	case "POST":
+		postHandlers[endpoint] = handler
+	case "PUT":
+		putHandlers[endpoint] = handler
+	case "DELETE":
+		deleteHandlers[endpoint] = handler
 	default:
-		response = RESPONSE_NOT_FOUND + CRLF
+		fmt.Println("Unsupported method:", method)
 	}
-	// Send data to the client
+}
+
+func helloWorldEndpoint(conn net.Conn, http HttpRequest) {
+	response := RESPONSE_OK + CRLF + "Hello World"
 	sendData(response, conn)
 }
 
-func echoEndpoint(echo string) string {
-	status := RESPONSE_OK
-	header := fmt.Sprintf("Content-Type: text/plain\r\nContent-Length: %d\r\n\r\n", len(echo))
-	body := echo
-	return status + header + body
-}
-
-func extractParts(value string) (status, headers, body string) {
+func extractParts(value string) HttpRequest {
 	// Split the input value into headers and body
 	parts := strings.Split(value, "\r\n\r\n")
 	headersPart := parts[0]
+	var body string
 	if len(parts) > 1 {
 		body = parts[1]
 	}
 
 	// Split headers part into request line and header lines
 	lines := strings.Split(headersPart, "\r\n")
-	status = lines[0]
-	headers = strings.Join(lines[1:], "\r\n")
+	status := lines[0]
+	headers := strings.Join(lines[1:], "\r\n")
+	method, path, version := extractHttpStatus(status)
 
-	return status, headers, body
+	return HttpRequest{Method: method, Path: path, Version: version, Headers: headers, Body: body}
+
 }
 
-func extractURL(request string) string {
-	return strings.Split(request, " ")[1]
+// GET /echo/abc HTTP/1.1\r\n
+func extractHttpStatus(request string) (method, path, version string) {
+	slice := strings.Split(request, " ")
+	return slice[0], slice[1], slice[2]
+}
+
+type HttpRequest struct {
+	Method  string
+	Path    string
+	Version string
+	Headers string
+	Body    string
 }
