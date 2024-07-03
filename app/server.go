@@ -81,13 +81,13 @@ func handleConnection(conn net.Conn) {
 
 func registerEndpoint(method string, endpoint string, handler handlerFunction) {
 	switch method {
-	case "GET":
+	case GET:
 		getHandlers[endpoint] = handler
-	case "POST":
+	case POST:
 		postHandlers[endpoint] = handler
-	case "PUT":
+	case PUT:
 		putHandlers[endpoint] = handler
-	case "DELETE":
+	case DELETE:
 		deleteHandlers[endpoint] = handler
 	default:
 		fmt.Println("Unsupported method:", method)
