@@ -55,13 +55,13 @@ func main() {
 func routeConnection(conn net.Conn, http HttpRequest) {
 	var f handlerFunction
 	switch http.Method {
-	case "GET":
+	case GET:
 		f = getHandlers[http.Path]
-	case "POST":
+	case POST:
 		f = postHandlers[http.Path]
-	case "PUT":
+	case PUT:
 		f = putHandlers[http.Path]
-	case "DELETE":
+	case DELETE:
 		f = deleteHandlers[http.Path]
 	default:
 		fmt.Println("Unsupported method:", http.Method)
