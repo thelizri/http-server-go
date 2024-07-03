@@ -73,9 +73,10 @@ func routeConnection(conn net.Conn, http HttpRequest) {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	data := getData(conn)
-	http_request := extractParts(data)
-	routeConnection(conn, http_request)
+	if data := getData(conn); len(data) > 0 {
+		http_request := extractParts(data)
+		routeConnection(conn, http_request)
+	}
 }
 
 func registerEndpoint(method string, endpoint string, handler handlerFunction) {
