@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"http-server/models"
+	"http-server/network"
 	"net"
 )
 
@@ -22,23 +23,33 @@ var (
 	deleteHandlers = make(map[string]handlerFunction)
 )
 
+func sendDefaultErrorPage(conn net.Conn) {
+	response := network.RESPONSE_METHOD_NOT_ALLOWED + network.CRLF + "<html><body><h1>405 METHOD NOT ALLOWED</h1></body></html>"
+	network.SendData(response, conn)
+}
+
 func RouteConnection(conn net.Conn, http models.HttpRequest) {
 	var handler handlerFunction
+	var present bool
 
 	switch http.Method {
 	case GET:
-		handler = getHandlers[http.Path]
+		handler, present = getHandlers[http.Path]
 	case POST:
-		handler = postHandlers[http.Path]
+		handler, present = postHandlers[http.Path]
 	case PUT:
-		handler = putHandlers[http.Path]
+		handler, present = putHandlers[http.Path]
 	case DELETE:
-		handler = deleteHandlers[http.Path]
+		handler, present = deleteHandlers[http.Path]
 	default:
 		fmt.Println("Unsupported method:", http.Method)
 	}
 
-	handler(conn, http)
+	if present {
+		handler(conn, http)
+	} else {
+		sendDefaultErrorPage(conn)
+	}
 }
 
 func registerHandler(method string, endpoint string, handler handlerFunction) {
