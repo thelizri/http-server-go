@@ -1,4 +1,4 @@
-package main
+package network
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func sendData(data string, conn net.Conn) {
+func SendData(data string, conn net.Conn) {
 	_, err := conn.Write([]byte(data))
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -14,7 +14,7 @@ func sendData(data string, conn net.Conn) {
 	}
 }
 
-func getData(conn net.Conn) string {
+func GetData(conn net.Conn) string {
 	buffer := make([]byte, 1024)
 	var data string
 	for {
