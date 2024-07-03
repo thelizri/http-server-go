@@ -26,16 +26,19 @@ var (
 
 func main() {
 	registerEndpoint(GET, "/hello", helloWorldEndpoint)
+	port := flag.Int("port", 4221, "the port the server is hosted on")
+	flag.Parse()
+
 	fmt.Println("Logs from program will appear below")
-	listener, err := net.Listen("tcp", "0.0.0.0:4221")
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", *port))
 	if err != nil {
-		fmt.Println("Failed to bind to port 4221")
+		fmt.Println("Failed to bind to port", *port)
 		os.Exit(1)
 	}
 
 	defer listener.Close()
 
-	fmt.Println("Server is now listening on port 4221")
+	fmt.Println("Server is now listening on port", *port)
 
 	for {
 		// Accept incoming request
