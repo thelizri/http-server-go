@@ -5,9 +5,22 @@ import (
 	"http-server/models"
 	"http-server/network"
 	"net"
+	"strings"
 )
 
-type handlerFunction func(conn net.Conn, http models.HttpRequest)
+type handlerFunction func(conn net.Conn, http models.HttpRequest, pathVars map[string]string)
+
+type handlerInfo struct {
+	pattern string
+	handler handlerFunction
+}
+
+var (
+	getHandlers    = []handlerInfo{}
+	postHandlers   = []handlerInfo{}
+	putHandlers    = []handlerInfo{}
+	deleteHandlers = []handlerInfo{}
+)
 
 const (
 	GET    = "GET"
@@ -16,52 +29,72 @@ const (
 	DELETE = "DELETE"
 )
 
-var (
-	getHandlers    = make(map[string]handlerFunction)
-	postHandlers   = make(map[string]handlerFunction)
-	putHandlers    = make(map[string]handlerFunction)
-	deleteHandlers = make(map[string]handlerFunction)
-)
-
 func sendDefaultErrorPage(conn net.Conn) {
 	response := network.RESPONSE_METHOD_NOT_ALLOWED + network.CRLF + "<html><body><h1>405 METHOD NOT ALLOWED</h1></body></html>"
 	network.SendData(response, conn)
 }
 
 func RouteConnection(conn net.Conn, http models.HttpRequest) {
-	var handler handlerFunction
-	var present bool
+	var handlers []handlerInfo
 
 	switch http.Method {
 	case GET:
-		handler, present = getHandlers[http.Path]
+		handlers = getHandlers
 	case POST:
-		handler, present = postHandlers[http.Path]
+		handlers = postHandlers
 	case PUT:
-		handler, present = putHandlers[http.Path]
+		handlers = putHandlers
 	case DELETE:
-		handler, present = deleteHandlers[http.Path]
+		handlers = deleteHandlers
 	default:
 		fmt.Println("Unsupported method:", http.Method)
+		sendDefaultErrorPage(conn)
+		return
 	}
 
-	if present {
-		handler(conn, http)
-	} else {
-		sendDefaultErrorPage(conn)
+	for _, info := range handlers {
+		if pathVars, matched := matchAndExtract(info.pattern, http.Path); matched {
+			info.handler(conn, http, pathVars)
+			return
+		}
 	}
+
+	sendDefaultErrorPage(conn)
 }
 
-func registerHandler(method string, endpoint string, handler handlerFunction) {
+func matchAndExtract(pattern, path string) (map[string]string, bool) {
+	patternParts := strings.Split(pattern, "/")
+	pathParts := strings.Split(path, "/")
+
+	if len(patternParts) != len(pathParts) {
+		return nil, false
+	}
+
+	vars := make(map[string]string)
+	for i := range patternParts {
+		if strings.HasPrefix(patternParts[i], "{") && strings.HasSuffix(patternParts[i], "}") {
+			key := patternParts[i][1 : len(patternParts[i])-1]
+			vars[key] = pathParts[i]
+		} else if patternParts[i] != pathParts[i] {
+			return nil, false
+		}
+	}
+
+	return vars, true
+}
+
+func registerHandler(method string, pattern string, handler handlerFunction) {
+	info := handlerInfo{pattern: pattern, handler: handler}
+
 	switch method {
 	case GET:
-		getHandlers[endpoint] = handler
+		getHandlers = append(getHandlers, info)
 	case POST:
-		postHandlers[endpoint] = handler
+		postHandlers = append(postHandlers, info)
 	case PUT:
-		putHandlers[endpoint] = handler
+		putHandlers = append(putHandlers, info)
 	case DELETE:
-		deleteHandlers[endpoint] = handler
+		deleteHandlers = append(deleteHandlers, info)
 	default:
 		fmt.Println("Unsupported method:", method)
 	}
@@ -69,4 +102,5 @@ func registerHandler(method string, endpoint string, handler handlerFunction) {
 
 func RegisterHandlers() {
 	registerHelloHandlers()
+	registerUserHandlers()
 }

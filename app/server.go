@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-// Enums for methods
-
 func main() {
 	port := flag.Int("port", 4221, "the port the server is hosted on")
 	flag.Parse()

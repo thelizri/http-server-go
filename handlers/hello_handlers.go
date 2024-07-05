@@ -10,7 +10,7 @@ func registerHelloHandlers() {
 	registerHandler(GET, "/hello", helloWorldEndpoint)
 }
 
-func helloWorldEndpoint(conn net.Conn, _ models.HttpRequest) {
+func helloWorldEndpoint(conn net.Conn, _ models.HttpRequest, _ map[string]string) {
 	response := network.RESPONSE_OK + network.CRLF + "Hello World"
 	network.SendData(response, conn)
 }
