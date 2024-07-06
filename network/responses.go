@@ -1,4 +1,4 @@
-package main
+package network
 
 const RESPONSE_OK string = "HTTP/1.1 200 OK\r\n"
 const RESPONSE_CREATED string = "HTTP/1.1 201 Created\r\n"
