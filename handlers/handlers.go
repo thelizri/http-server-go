@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type handlerFunction func(conn net.Conn, http models.HttpRequest, pathVars map[string]string)
+type handlerFunction func(conn net.Conn, http models.HttpRequest)
 
 type handlerInfo struct {
 	pattern string
@@ -52,9 +52,13 @@ func RouteConnection(conn net.Conn, http models.HttpRequest) {
 		return
 	}
 
+	path, query := splitPathAndQuery(http.Path)
 	for _, info := range handlers {
-		if pathVars, matched := matchAndExtract(info.pattern, http.Path); matched {
-			info.handler(conn, http, pathVars)
+		if pathVars, matched := matchAndExtract(info.pattern, path); matched {
+			queryParams := parseQueryParams(query)
+			http.Query = queryParams
+			http.PathVariables = pathVars
+			info.handler(conn, http)
 			return
 		}
 	}
@@ -81,6 +85,26 @@ func matchAndExtract(pattern, path string) (map[string]string, bool) {
 	}
 
 	return vars, true
+}
+
+func splitPathAndQuery(path string) (string, string) {
+	parts := strings.SplitN(path, "?", 2)
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+	return path, ""
+}
+
+func parseQueryParams(query string) map[string]string {
+	params := make(map[string]string)
+	pairs := strings.Split(query, "&")
+	for _, pair := range pairs {
+		keyValue := strings.SplitN(pair, "=", 2)
+		if len(keyValue) == 2 {
+			params[keyValue[0]] = keyValue[1]
+		}
+	}
+	return params
 }
 
 func registerHandler(method string, pattern string, handler handlerFunction) {
