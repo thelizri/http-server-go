@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"http-server/database"
 	"http-server/models"
 	"http-server/network"
@@ -13,22 +14,24 @@ import (
 var dao = database.GetDao()
 
 func registerUserHandlers() {
-	registerHandler(POST, "/user/create", createUser)
-	registerHandler(GET, "/user/{id}", getUser)
+	registerHandler(POST, "/users/create", createUser)
+	registerHandler(GET, "/users/{id}", getUserByIdAsPathVariable)
+	registerHandler(GET, "/users", getUserByIdAsQuery)
 }
 
-func getUser(conn net.Conn, http models.HttpRequest, pathVars map[string]string) {
-	// dao := database.GetDao()
-
-	id, err := strconv.Atoi(pathVars["id"])
+func getUserByIdAsQuery(conn net.Conn, http models.HttpRequest) {
+	key := "id"
+	id, err := strconv.Atoi(http.Query[key])
+	var response string
 
 	if err != nil {
-
+		response = network.RESPONSE_BAD_REQUEST + network.CRLF + fmt.Sprintf("missing query key: %s", key)
+		network.SendData(response, conn)
+		return
 	}
 
 	data := models.User{Id: id}
 	user, err := dao.GetUserById(data.Id)
-	var response string
 
 	if err != nil {
 		response = network.RESPONSE_BAD_REQUEST + network.CRLF + "not working"
@@ -40,7 +43,31 @@ func getUser(conn net.Conn, http models.HttpRequest, pathVars map[string]string)
 	network.SendData(response, conn)
 }
 
-func createUser(conn net.Conn, http models.HttpRequest, _ map[string]string) {
+func getUserByIdAsPathVariable(conn net.Conn, http models.HttpRequest) {
+	key := "id"
+	id, err := strconv.Atoi(http.PathVariables[key])
+	var response string
+
+	if err != nil {
+		response = network.RESPONSE_BAD_REQUEST + network.CRLF + fmt.Sprintf("missing path variable: %s", key)
+		network.SendData(response, conn)
+		return
+	}
+
+	data := models.User{Id: id}
+	user, err := dao.GetUserById(data.Id)
+
+	if err != nil {
+		response = network.RESPONSE_BAD_REQUEST + network.CRLF + "not working"
+	} else {
+		userJson, _ := json.Marshal(user)
+		response = network.RESPONSE_OK + network.CRLF + string(userJson)
+	}
+
+	network.SendData(response, conn)
+}
+
+func createUser(conn net.Conn, http models.HttpRequest) {
 	// dao := database.GetDao()
 	data := new(models.User)
 	json.Unmarshal([]byte(http.Body), &data)

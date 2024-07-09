@@ -16,6 +16,8 @@ import (
 
 // Dao represents a data access object that interacts with the database.
 type Dao interface {
+	// GetUserById retrieves a user by its ID.
+	// It returns an error if the provided ID does not exist.
 	GetUserById(id int) (*models.User, error)
 
 	// CreateUser stores a user with the specified username and password.
@@ -93,7 +95,7 @@ func prepareGetUserById(db *sql.DB) {
 	}
 }
 
-func (s *dao) GetUserById(id int) (*models.User, error) {
+func (d *dao) GetUserById(id int) (*models.User, error) {
 	var userId int
 	var username string
 	var password string
@@ -105,7 +107,7 @@ func (s *dao) GetUserById(id int) (*models.User, error) {
 	return &models.User{Id: userId, Username: username, Password: password}, nil
 }
 
-func (s *dao) CreateUser(username, password string) error {
+func (d *dao) CreateUser(username, password string) error {
 	if _, err := createUserStmt.Exec(username, password); err != nil {
 		return err
 	}
@@ -115,14 +117,14 @@ func (s *dao) CreateUser(username, password string) error {
 
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.
-func (s *dao) Health() map[string]string {
+func (d *dao) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	stats := make(map[string]string)
 
 	// Ping the database
-	err := s.db.PingContext(ctx)
+	err := d.db.PingContext(ctx)
 	if err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
@@ -135,7 +137,7 @@ func (s *dao) Health() map[string]string {
 	stats["message"] = "It's healthy"
 
 	// Get database stats (like open connections, in use, idle, etc.)
-	dbStats := s.db.Stats()
+	dbStats := d.db.Stats()
 	stats["open_connections"] = strconv.Itoa(dbStats.OpenConnections)
 	stats["in_use"] = strconv.Itoa(dbStats.InUse)
 	stats["idle"] = strconv.Itoa(dbStats.Idle)
@@ -168,7 +170,7 @@ func (s *dao) Health() map[string]string {
 // It logs a message indicating the disconnection from the specific database.
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
-func (s *dao) Close() error {
+func (d *dao) Close() error {
 	log.Printf("Disconnected from database: %s", dburl)
-	return s.db.Close()
+	return d.db.Close()
 }
