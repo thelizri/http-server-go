@@ -1,6 +1,7 @@
-package database
+package userrepository
 
 import (
+	"http-server/data/database"
 	"http-server/models"
 )
 
@@ -17,23 +18,27 @@ type UserRepository interface {
 	CreateUser(username, password string) error
 }
 
+type userRepository struct {
+	db database.DbRepository
+}
+
 var (
-	userRepository *repository
+	userRepositoryInstance *userRepository
 )
 
 func NewUserRepository() UserRepository {
-	if userRepository != nil {
-		return userRepository
+	if userRepositoryInstance != nil {
+		return userRepositoryInstance
 	}
 
-	userRepository = &repository{
-		db: db,
+	userRepositoryInstance = &userRepository{
+		db: database.NewDbRepository(),
 	}
 
-	return userRepository
+	return userRepositoryInstance
 }
 
-func (d *repository) GetUserById(id int) (*models.User, error) {
+func (r *userRepository) GetUserById(id int) (*models.User, error) {
 	var userId int
 	var username string
 	var password string
@@ -45,7 +50,7 @@ func (d *repository) GetUserById(id int) (*models.User, error) {
 	return &models.User{Id: userId, Username: username, Password: password}, nil
 }
 
-func (d *repository) CreateUser(username, password string) error {
+func (r *userRepository) CreateUser(username, password string) error {
 	if _, err := createUserStmt.Exec(username, password); err != nil {
 		return err
 	}

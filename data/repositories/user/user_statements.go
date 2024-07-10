@@ -1,16 +1,23 @@
-package database
+package userrepository
 
 import (
 	"database/sql"
+	"http-server/data/database"
 	"log"
 )
 
 var (
+	dbRepository    database.DbRepository
 	createUserStmt  *sql.Stmt
 	getUserByIdStmt *sql.Stmt
 )
 
-func prepareUserStatements() {
+func init() {
+	dbRepository = database.NewDbRepository()
+	prepareStatements()
+}
+
+func prepareStatements() {
 	prepareCreateUserStmt()
 	prepareGetUserByIdStmt()
 }
@@ -18,7 +25,7 @@ func prepareUserStatements() {
 func prepareCreateUserStmt() {
 	query := "INSERT INTO user (username, password) VALUES (?, ?)"
 
-	if stmt, err := db.Prepare(query); err != nil {
+	if stmt, err := dbRepository.Prepare(query); err != nil {
 		log.Fatal("Could not prepare Create User statement")
 	} else {
 		createUserStmt = stmt
@@ -28,7 +35,7 @@ func prepareCreateUserStmt() {
 func prepareGetUserByIdStmt() {
 	query := "SELECT * FROM user WHERE ID = ?"
 
-	if stmt, err := db.Prepare(query); err != nil {
+	if stmt, err := dbRepository.Prepare(query); err != nil {
 		log.Fatal("Could not prepare Get User By Id statement")
 	} else {
 		getUserByIdStmt = stmt

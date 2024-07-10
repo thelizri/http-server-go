@@ -5,16 +5,14 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
-
-	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // DbRepository represents a data access object that interacts with the database.
 type DbRepository interface {
+	Prepare(query string) (*sql.Stmt, error)
+
 	// Health returns a map of health status information.
 	// The keys and values in the map are dao-specific.
 	Health() map[string]string
@@ -24,48 +22,29 @@ type DbRepository interface {
 	Close() error
 }
 
-type repository struct {
+type dbRepository struct {
 	db *sql.DB
 }
 
-var (
-	dburl        = os.Getenv("DB_URL")
-	db           *sql.DB
-	dbRepository *repository
-)
-
-func init() {
-	var err error
-
-	db, err = sql.Open("sqlite3", dburl)
-	if err != nil {
-		// This will not be a connection error, but a DSN parse error or
-		// another initialization error.
-		log.Fatal(err)
+func NewDbRepository() DbRepository {
+	if dbRepositoryInstance != nil {
+		return dbRepositoryInstance
 	}
 
-	prepareStatements()
-}
-
-func prepareStatements() {
-	prepareUserStatements()
-}
-
-func newDbRepository() DbRepository {
-	if dbRepository != nil {
-		return dbRepository
-	}
-
-	dbRepository = &repository{
+	dbRepositoryInstance = &dbRepository{
 		db: db,
 	}
 
-	return dbRepository
+	return dbRepositoryInstance
+}
+
+func (r *dbRepository) Prepare(query string) (*sql.Stmt, error) {
+	return r.db.Prepare(query)
 }
 
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.
-func (r *repository) Health() map[string]string {
+func (r *dbRepository) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
@@ -118,7 +97,7 @@ func (r *repository) Health() map[string]string {
 // It logs a message indicating the disconnection from the specific database.
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
-func (r *repository) Close() error {
+func (r *dbRepository) Close() error {
 	log.Printf("Disconnected from database: %s", dburl)
 	return r.db.Close()
 }

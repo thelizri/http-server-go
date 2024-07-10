@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"http-server/database"
+	userrepository "http-server/data/repositories/user"
 	"http-server/models"
 	"http-server/network"
 	"net"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var userRepository = database.NewUserRepository()
+var userRepository = userrepository.NewUserRepository()
 
 func registerUserHandlers() {
 	registerHandler(POST, "/users/create", createUser)
