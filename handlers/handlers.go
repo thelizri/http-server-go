@@ -29,6 +29,10 @@ const (
 	DELETE = "DELETE"
 )
 
+func init() {
+	registerHandlers()
+}
+
 func sendDefaultErrorPage(conn net.Conn) {
 	response := network.RESPONSE_METHOD_NOT_ALLOWED + network.CRLF + "<html><body><h1>405 METHOD NOT ALLOWED</h1></body></html>"
 	network.SendData(response, conn)
@@ -124,7 +128,7 @@ func registerHandler(method string, pattern string, handler handlerFunction) {
 	}
 }
 
-func RegisterHandlers() {
+func registerHandlers() {
 	registerHelloHandlers()
 	registerUserHandlers()
 }
