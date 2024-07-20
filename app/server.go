@@ -26,9 +26,6 @@ func main() {
 
 	fmt.Println("Server is now listening on port", *port)
 
-	handlers.RegisterHandlers()
-	fmt.Println("Handlers registered")
-
 	for {
 		// Accept incoming request
 		conn, err := listener.Accept()

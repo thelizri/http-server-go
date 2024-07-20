@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"http-server/database"
+	userrepository "http-server/data/repositories/user"
 	"http-server/models"
 	"http-server/network"
 	"net"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var dao = database.GetDao()
+var userRepository = userrepository.NewUserRepository()
 
 func registerUserHandlers() {
 	registerHandler(POST, "/users/create", createUser)
@@ -31,7 +31,7 @@ func getUserByIdAsQuery(conn net.Conn, http models.HttpRequest) {
 	}
 
 	data := models.User{Id: id}
-	user, err := dao.GetUserById(data.Id)
+	user, err := userRepository.GetUserById(data.Id)
 
 	if err != nil {
 		response = network.RESPONSE_BAD_REQUEST + network.CRLF + "not working"
@@ -55,7 +55,7 @@ func getUserByIdAsPathVariable(conn net.Conn, http models.HttpRequest) {
 	}
 
 	data := models.User{Id: id}
-	user, err := dao.GetUserById(data.Id)
+	user, err := userRepository.GetUserById(data.Id)
 
 	if err != nil {
 		response = network.RESPONSE_BAD_REQUEST + network.CRLF + "not working"
@@ -73,7 +73,7 @@ func createUser(conn net.Conn, http models.HttpRequest) {
 	json.Unmarshal([]byte(http.Body), &data)
 	var response string
 
-	if err := dao.CreateUser(data.Username, data.Password); err != nil {
+	if err := userRepository.CreateUser(data.Username, data.Password); err != nil {
 		var msg string
 		usernameTaken := "Username already exists."
 		passwordTooShort := "Password must be 6 or more characters."
