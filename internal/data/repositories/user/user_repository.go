@@ -1,8 +1,8 @@
 package userrepository
 
 import (
-	"http-server/data/database"
-	"http-server/models"
+	"http-server/internal/data/database"
+	"http-server/internal/models"
 )
 
 // Dao represents a data access object that interacts with the database.

@@ -3,9 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	userrepository "http-server/data/repositories/user"
-	"http-server/models"
-	"http-server/network"
+	userrepository "http-server/internal/data/repositories/user"
+	"http-server/internal/models"
+	"http-server/internal/network"
 	"net"
 	"strconv"
 	"strings"

@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"http-server/models"
-	"http-server/network"
+	"http-server/internal/models"
+	"http-server/internal/network"
 	"net"
 	"strings"
 )
