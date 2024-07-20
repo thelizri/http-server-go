@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"http-server/models"
-	"http-server/network"
+	"http-server/internal/models"
+	"http-server/internal/network"
 	"net"
 )
 
