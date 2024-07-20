@@ -2,7 +2,7 @@ package userrepository
 
 import (
 	"database/sql"
-	"http-server/data/database"
+	"http-server/internal/data/database"
 	"log"
 )
 
