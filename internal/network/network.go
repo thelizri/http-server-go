@@ -30,7 +30,7 @@ func GetData(conn net.Conn) string {
 
 		//Handle error
 		if err != nil {
-			fmt.Errorf("Cannot read data into buffer, %v", err)
+			fmt.Printf("Cannot read data into buffer, %v\n", err)
 			return ""
 		}
 
