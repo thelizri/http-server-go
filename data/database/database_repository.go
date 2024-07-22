@@ -21,8 +21,10 @@ type DbRepository interface {
 	// It returns an error if the connection cannot be closed.
 	Close() error
 
+	// Counts all rows in a specified table
 	Count(table string) (int, error)
 
+	// Deletes all rows in a specified table
 	DeleteAll(table string) error
 }
 
