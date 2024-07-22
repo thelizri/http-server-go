@@ -134,11 +134,6 @@ func TestCreateUser(t *testing.T) {
 		}
 
 		validateTwoUsersTest := func(t *testing.T, tt twoUsersTest, got int) {
-			// const USERS_STR = " users"
-			//
-			// argsOne := []string{tt.usernameOne, tt.passwordOne}
-			// gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(tt.want)+USERS_STR
-
 			if got != tt.want {
 				t.Errorf("CreateUser(%s, %s) -> CreateUser(%s, %s) = %d, want: %d", tt.user.username, tt.user.password, tt.anotherUser.username, tt.anotherUser.password, got, tt.want)
 			}
