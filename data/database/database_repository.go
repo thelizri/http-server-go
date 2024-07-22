@@ -20,6 +20,10 @@ type DbRepository interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+
+	Count(table string) (int, error)
+
+	DeleteAll(table string) error
 }
 
 type dbRepository struct {
@@ -100,4 +104,19 @@ func (r *dbRepository) Health() map[string]string {
 func (r *dbRepository) Close() error {
 	log.Printf("Disconnected from database: %s", dburl)
 	return r.db.Close()
+}
+
+func (r *dbRepository) Count(table string) (int, error) {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", table)
+	var count int
+	err := r.db.QueryRow(query).Scan(&count)
+
+	return count, err
+}
+
+func (r *dbRepository) DeleteAll(table string) error {
+	query := fmt.Sprintf("DELETE FROM %s", table)
+	_, err := r.db.Exec(query)
+
+	return err
 }
