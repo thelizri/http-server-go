@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"http-server/handlers"
-	"http-server/models"
-	"http-server/network"
+	"http-server/internal/handlers"
+	"http-server/internal/models"
+	"http-server/internal/network"
 	"net"
 	"os"
 	"strings"

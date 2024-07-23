@@ -1,7 +1,7 @@
 package userrepository
 
 import (
-	"http-server/util/testing"
+	testingutil "http-server/internal/util/testing"
 	"os"
 	"strconv"
 	"testing"
