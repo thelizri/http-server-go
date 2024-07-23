@@ -111,19 +111,21 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	setupTestHandlers := func() (func(*testing.T, singleUserTest), func(*testing.T, twoUsersTest)) {
+		const TEST_FUNCTION_STR = "CreateUser"
+		const USERS_STR = " users"
+
 		executeSingleUserTest := func(tt singleUserTest) int {
 			testFunction(tt.username, tt.password)
 			return repository.count()
 		}
 
 		validateSingleUserTest := func(t *testing.T, tt singleUserTest, got int) {
-			const USERS_STR = " users"
-
-			args := []string{tt.username, tt.password}
 			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(tt.want)+USERS_STR
 
 			if got != tt.want {
-				t.Errorf(testingutil.ParseError(testFunction, args, gotStr, wantStr))
+				t.Errorf("%s(%s, %s) -> repository.count() = %s, want: %s",
+					TEST_FUNCTION_STR, tt.username, tt.password,
+					gotStr, wantStr)
 			}
 		}
 
@@ -134,8 +136,13 @@ func TestCreateUser(t *testing.T) {
 		}
 
 		validateTwoUsersTest := func(t *testing.T, tt twoUsersTest, got int) {
+			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(tt.want)+USERS_STR
+
 			if got != tt.want {
-				t.Errorf("CreateUser(%s, %s) -> CreateUser(%s, %s) = %d, want: %d", tt.user.username, tt.user.password, tt.anotherUser.username, tt.anotherUser.password, got, tt.want)
+				t.Errorf("%s(%s, %s) -> %s(%s, %s) -> repository.count() = %s, want: %s",
+					TEST_FUNCTION_STR, tt.user.username, tt.user.password,
+					TEST_FUNCTION_STR, tt.anotherUser.username, tt.anotherUser.password,
+					gotStr, wantStr)
 			}
 		}
 
