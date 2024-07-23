@@ -12,15 +12,23 @@ type Describable interface {
 	Description() string
 }
 
-func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType) GotType, validateTest func(*testing.T, TestType, GotType), cleanup func()) func(*testing.T, TestType) {
-	return func(t *testing.T, tt TestType) {
-		got := executeTest(tt)
-		validateTest(t, tt, got)
-		cleanup()
+type TestHandler func(*testing.T, Describable) error
+
+func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType) GotType, validateTest func(*testing.T, TestType, GotType), cleanup func()) TestHandler {
+	return func(t *testing.T, tt Describable) error {
+		if a, ok := tt.(TestType); ok {
+			got := executeTest(a)
+			validateTest(t, a, got)
+			cleanup()
+		} else {
+			return fmt.Errorf("Something went wrong when asserting Describable as the generic type TestType.")
+		}
+
+		return nil
 	}
 }
 
-func HandleTests[TestType Describable](t *testing.T, tests []TestType, testHandler func(*testing.T, TestType)) {
+func HandleTests[TestType Describable](t *testing.T, tests []TestType, testHandler TestHandler) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf(tt.Description(), i), func(t *testing.T) {
 			testHandler(t, tt)

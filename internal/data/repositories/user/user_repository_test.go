@@ -109,7 +109,7 @@ func TestCreateUser(t *testing.T) {
 		return singleUserTests, twoUsersTests
 	}
 
-	setupTestHandlers := func() (func(*testing.T, singleUserTest), func(*testing.T, twoUsersTest)) {
+	setupTestHandlers := func() (testingutil.TestHandler, testingutil.TestHandler) {
 		const TEST_FUNCTION_STR = "CreateUser"
 		const USERS_STR = " users"
 
