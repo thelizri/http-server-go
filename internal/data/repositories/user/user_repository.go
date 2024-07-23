@@ -3,6 +3,7 @@ package userrepository
 import (
 	"http-server/internal/data/database"
 	"http-server/internal/models"
+	"log"
 )
 
 // Dao represents a data access object that interacts with the database.
@@ -16,11 +17,19 @@ type UserRepository interface {
 	// 1. The username is already taken.
 	// 2. The password is shorter than 6 characters.
 	CreateUser(username, password string) error
+
+	count() int
+
+	deleteAll() error
 }
 
 type userRepository struct {
 	db database.DbRepository
 }
+
+const (
+	TABLE_NAME = "user"
+)
 
 var (
 	userRepositoryInstance *userRepository
@@ -36,6 +45,20 @@ func NewUserRepository() UserRepository {
 	}
 
 	return userRepositoryInstance
+}
+
+func (r *userRepository) count() int {
+	count, err := r.db.Count(TABLE_NAME)
+
+	if err != nil {
+		log.Fatalf("Could not count %s: %s", TABLE_NAME, err)
+	}
+
+	return count
+}
+
+func (r *userRepository) deleteAll() error {
+	return r.db.DeleteAll(TABLE_NAME)
 }
 
 func (r *userRepository) GetUserById(id int) (*models.User, error) {
