@@ -6,7 +6,7 @@ all: server
 server:
 	@set -e
 	@tmpFile=$$(mktemp)
-	@go build -o "$$tmpFile" app/*.go
+	@go build -o "$$tmpFile" cmd/server/*.go
 	@exec "$$tmpFile" $(ARGS)
 
 test:
