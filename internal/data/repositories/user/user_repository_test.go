@@ -33,6 +33,17 @@ type twoUsersTest struct {
 	anotherUser
 }
 
+var (
+	USER = user{
+		"daniel",
+		"123456",
+	}
+	ANOTHER_USER = anotherUser{
+		"karl",
+		"123456",
+	}
+)
+
 func (test singleUserTest) Description() string {
 	return test.description
 }
@@ -57,10 +68,7 @@ func TestCreateUser(t *testing.T) {
 					"Successfully create user",
 					1,
 				},
-				user{
-					"daniel",
-					"123456",
-				},
+				USER,
 			},
 
 			{
@@ -69,8 +77,8 @@ func TestCreateUser(t *testing.T) {
 					0,
 				},
 				user{
-					"daniel",
-					"12345",
+					USER.username,
+					USER.password[:len(USER.password)-1],
 				},
 			},
 		}
@@ -81,14 +89,8 @@ func TestCreateUser(t *testing.T) {
 					"Successfully create two users",
 					2,
 				},
-				user{
-					"daniel",
-					"123456",
-				},
-				anotherUser{
-					"karl",
-					"123456",
-				},
+				USER,
+				ANOTHER_USER,
 			},
 
 			{
@@ -96,13 +98,10 @@ func TestCreateUser(t *testing.T) {
 					"Conflicting usernames",
 					1,
 				},
-				user{
-					"daniel",
-					"123456",
-				},
+				USER,
 				anotherUser{
-					"daniel",
-					"123456",
+					USER.username,
+					USER.password,
 				},
 			},
 		}
