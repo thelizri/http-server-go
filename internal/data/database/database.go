@@ -21,7 +21,7 @@ func init() {
 	if dburl == "" {
 		dburl = ":memory:"
 	}
-
+  
 	db, err = sql.Open("sqlite3", dburl)
 	if err != nil {
 		// This will not be a connection error, but a DSN parse error or
