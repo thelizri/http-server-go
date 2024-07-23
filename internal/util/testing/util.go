@@ -31,7 +31,9 @@ func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType
 func HandleTests[TestType Describable](t *testing.T, tests []TestType, testHandler TestHandler) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf(tt.Description(), i), func(t *testing.T) {
-			testHandler(t, tt)
+			if err := testHandler(t, tt); err != nil {
+				panic(err)
+			}
 		})
 	}
 }
