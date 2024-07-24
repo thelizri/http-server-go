@@ -14,7 +14,7 @@ type Describable interface {
 
 type TestHandler func(*testing.T, Describable) error
 
-func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType) GotType, validateTest func(*testing.T, TestType, GotType), cleanup func()) TestHandler {
+func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType) GotType, validateTest func(*testing.T, TestType, any), cleanup func()) TestHandler {
 	return func(t *testing.T, tt Describable) error {
 		if a, ok := tt.(TestType); ok {
 			got := executeTest(a)
@@ -36,6 +36,22 @@ func HandleTests[TestType Describable](t *testing.T, tests []TestType, testHandl
 			}
 		})
 	}
+}
+
+func AssertGotAndWantType[V any](t *testing.T, gotBeforeAssertion any, wantBeforeAssertion any) (V, V) {
+	got, gotOk := gotBeforeAssertion.(V)
+	want, wantOk := wantBeforeAssertion.(V)
+
+	validateAssertion := func(name string, gw any, ok bool) {
+		if !ok {
+			t.Errorf("%s: expected type '%s' but received '%s'", name, reflect.TypeOf((*V)(nil)), reflect.TypeOf(gw))
+		}
+	}
+
+	validateAssertion("got", got, gotOk)
+	validateAssertion("want", want, wantOk)
+
+	return got, want
 }
 
 func parseDescription(args []string) string {

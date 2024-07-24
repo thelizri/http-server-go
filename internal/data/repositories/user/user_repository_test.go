@@ -11,7 +11,7 @@ var repository UserRepository
 
 type basicTest struct {
 	description string
-	want        int
+	want        any
 }
 
 type user struct {
@@ -118,8 +118,9 @@ func TestCreateUser(t *testing.T) {
 			return repository.count()
 		}
 
-		validateSingleUserTest := func(t *testing.T, tt singleUserTest, got int) {
-			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(tt.want)+USERS_STR
+		validateSingleUserTest := func(t *testing.T, tt singleUserTest, gotBeforeAssertion any) {
+			got, want := testingutil.AssertGotAndWantType[int](t, gotBeforeAssertion, tt.want)
+			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(want)+USERS_STR
 
 			if got != tt.want {
 				t.Errorf("%s(%s, %s) -> repository.count() = %s, want: %s",
@@ -134,8 +135,9 @@ func TestCreateUser(t *testing.T) {
 			return repository.count()
 		}
 
-		validateTwoUsersTest := func(t *testing.T, tt twoUsersTest, got int) {
-			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(tt.want)+USERS_STR
+		validateTwoUsersTest := func(t *testing.T, tt twoUsersTest, gotBeforeAssertion any) {
+			got, want := testingutil.AssertGotAndWantType[int](t, gotBeforeAssertion, tt.want)
+			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(want)+USERS_STR
 
 			if got != tt.want {
 				t.Errorf("%s(%s, %s) -> %s(%s, %s) -> repository.count() = %s, want: %s",
