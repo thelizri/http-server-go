@@ -8,8 +8,13 @@ import (
 	"testing"
 )
 
+type BasicTest struct {
+	Description string
+	Want        any
+}
+
 type Describable interface {
-	Description() string
+	Describe() string
 }
 
 type TestHandler func(*testing.T, Describable) error
@@ -30,7 +35,7 @@ func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType
 
 func HandleTests[TestType Describable](t *testing.T, tests []TestType, testHandler TestHandler) {
 	for _, tt := range tests {
-		t.Run(tt.Description(), func(t *testing.T) {
+		t.Run(tt.Describe(), func(t *testing.T) {
 			if err := testHandler(t, tt); err != nil {
 				panic(err)
 			}

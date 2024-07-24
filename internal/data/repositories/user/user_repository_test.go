@@ -23,12 +23,12 @@ type anotherUser struct {
 }
 
 type singleUserTest struct {
-	basicTest
+	testingutil.BasicTest
 	user
 }
 
 type twoUsersTest struct {
-	basicTest
+	testingutil.BasicTest
 	user
 	anotherUser
 }
@@ -44,12 +44,12 @@ var (
 	}
 )
 
-func (test singleUserTest) Description() string {
-	return test.description
+func (test singleUserTest) Describe() string {
+	return test.Description
 }
 
-func (test twoUsersTest) Description() string {
-	return test.description
+func (test twoUsersTest) Describe() string {
+	return test.Description
 }
 
 func TestMain(m *testing.M) {
@@ -64,17 +64,17 @@ func TestCreateUser(t *testing.T) {
 	setupTests := func() (singleUserTests []singleUserTest, twoUsersTests []twoUsersTest) {
 		singleUserTests = []singleUserTest{
 			{
-				basicTest{
-					"Successfully create user",
-					1,
+				testingutil.BasicTest{
+					Description: "Successfully create user",
+					Want:        1,
 				},
 				USER,
 			},
 
 			{
-				basicTest{
-					"Password too short (less than 6 chars)",
-					0,
+				testingutil.BasicTest{
+					Description: "Password too short (less than 6 chars)",
+					Want:        0,
 				},
 				user{
 					USER.username,
@@ -85,18 +85,18 @@ func TestCreateUser(t *testing.T) {
 
 		twoUsersTests = []twoUsersTest{
 			{
-				basicTest{
-					"Successfully create two users",
-					2,
+				testingutil.BasicTest{
+					Description: "Successfully create two users",
+					Want:        2,
 				},
 				USER,
 				ANOTHER_USER,
 			},
 
 			{
-				basicTest{
-					"Conflicting usernames",
-					1,
+				testingutil.BasicTest{
+					Description: "Conflicting usernames",
+					Want:        1,
 				},
 				USER,
 				anotherUser{
@@ -119,10 +119,10 @@ func TestCreateUser(t *testing.T) {
 		}
 
 		validateSingleUserTest := func(t *testing.T, tt singleUserTest, gotBeforeAssertion any) {
-			got, want := testingutil.AssertGotAndWantType[int](t, gotBeforeAssertion, tt.want)
+			got, want := testingutil.AssertGotAndWantType[int](t, gotBeforeAssertion, tt.Want)
 			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(want)+USERS_STR
 
-			if got != tt.want {
+			if got != tt.Want {
 				t.Errorf("%s(%s, %s) -> repository.count() = %s, want: %s",
 					TEST_FUNCTION_STR, tt.username, tt.password,
 					gotStr, wantStr)
@@ -136,10 +136,10 @@ func TestCreateUser(t *testing.T) {
 		}
 
 		validateTwoUsersTest := func(t *testing.T, tt twoUsersTest, gotBeforeAssertion any) {
-			got, want := testingutil.AssertGotAndWantType[int](t, gotBeforeAssertion, tt.want)
+			got, want := testingutil.AssertGotAndWantType[int](t, gotBeforeAssertion, tt.Want)
 			gotStr, wantStr := strconv.Itoa(got)+USERS_STR, strconv.Itoa(want)+USERS_STR
 
-			if got != tt.want {
+			if got != tt.Want {
 				t.Errorf("%s(%s, %s) -> %s(%s, %s) -> repository.count() = %s, want: %s",
 					TEST_FUNCTION_STR, tt.user.username, tt.user.password,
 					TEST_FUNCTION_STR, tt.anotherUser.username, tt.anotherUser.password,
