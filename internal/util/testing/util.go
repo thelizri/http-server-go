@@ -11,39 +11,37 @@ import (
 type BasicTest struct {
 	Description string
 	Want        any
+	Error       string
 }
 
 type Describable interface {
-	Describe() string
+	String() string
 }
 
-type TestHandler func(*testing.T, Describable) error
+type TestHandler func(*testing.T, Describable)
 
-func GetTestHandler[TestType Describable, GotType any](executeTest func(TestType) GotType, validateTest func(*testing.T, TestType, any), cleanup func()) TestHandler {
-	return func(t *testing.T, tt Describable) error {
+func GetTestHandler[TestType Describable, GotType any](
+	executeTest func(*testing.T, TestType) GotType, validateTest func(*testing.T, TestType, any), cleanup func()) TestHandler {
+	return func(t *testing.T, tt Describable) {
 		if a, ok := tt.(TestType); ok {
-			got := executeTest(a)
+			got := executeTest(t, a)
 			validateTest(t, a, got)
 			cleanup()
 		} else {
-			return fmt.Errorf("Something went wrong when asserting Describable as the generic type TestType.")
+			t.Error("Something went wrong when asserting Describable as the generic type TestType.")
 		}
-
-		return nil
 	}
 }
 
 func HandleTests[TestType Describable](t *testing.T, tests []TestType, testHandler TestHandler) {
 	for _, tt := range tests {
-		t.Run(tt.Describe(), func(t *testing.T) {
-			if err := testHandler(t, tt); err != nil {
-				panic(err)
-			}
+		t.Run(tt.String(), func(t *testing.T) {
+			testHandler(t, tt)
 		})
 	}
 }
 
-func AssertGotAndWantType[V any](t *testing.T, gotBeforeAssertion any, wantBeforeAssertion any) (V, V) {
+func AssertGotAndWantType[V comparable](t *testing.T, gotBeforeAssertion any, wantBeforeAssertion any) (V, V) {
 	got, gotOk := gotBeforeAssertion.(V)
 	want, wantOk := wantBeforeAssertion.(V)
 
@@ -57,6 +55,18 @@ func AssertGotAndWantType[V any](t *testing.T, gotBeforeAssertion any, wantBefor
 	validateAssertion("want", want, wantOk)
 
 	return got, want
+}
+
+func ValidateResult(t *testing.T, errStr string, got any, want any) {
+	if got != want {
+		t.Errorf(errStr)
+	}
+}
+
+func ValidateError(t *testing.T, testFunctionStr string, actualError error, expectedErrorStr string) {
+	if actualError != nil && actualError.Error() != expectedErrorStr {
+		t.Errorf("%s expected the error '%s' but got '%s'", testFunctionStr, expectedErrorStr, actualError.Error())
+	}
 }
 
 func parseDescription(args []string) string {

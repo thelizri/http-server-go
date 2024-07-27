@@ -8,7 +8,6 @@ import (
 	"http-server/internal/network"
 	"net"
 	"strconv"
-	"strings"
 )
 
 var userRepository = userrepository.NewUserRepository()
@@ -34,7 +33,7 @@ func getUserByIdAsQuery(conn net.Conn, http models.HttpRequest) {
 	user, err := userRepository.GetUserById(data.Id)
 
 	if err != nil {
-		response = network.RESPONSE_BAD_REQUEST + network.CRLF + "not working"
+		response = network.RESPONSE_BAD_REQUEST + network.CRLF + err.Error()
 	} else {
 		userJson, _ := json.Marshal(user)
 		response = network.RESPONSE_OK + network.CRLF + string(userJson)
@@ -74,20 +73,8 @@ func createUser(conn net.Conn, http models.HttpRequest) {
 	var response string
 
 	if err := userRepository.CreateUser(data.Username, data.Password); err != nil {
-		var msg string
-		usernameTaken := "Username already exists."
-		passwordTooShort := "Password must be 6 or more characters."
 
-		switch {
-		case strings.HasPrefix(err.Error(), "UNIQUE"):
-			msg = usernameTaken
-		case strings.HasPrefix(err.Error(), "CHECK"):
-			msg = passwordTooShort
-		default:
-			msg = network.RESPONSE_BAD_REQUEST
-		}
-
-		response = network.RESPONSE_BAD_REQUEST + network.CRLF + msg
+		response = network.RESPONSE_BAD_REQUEST + network.CRLF + err.Error()
 	} else {
 		response = network.RESPONSE_OK + network.CRLF + "Created user"
 	}
